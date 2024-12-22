@@ -1,10 +1,9 @@
 from utime import sleep
 from ulora import LoRa, ModemConfig, SPIConfig
-#also need to import lora when actually testing
-from caretaker_header import get_location, oled, PATIENT_ADDRESS, buzzer_pin, patient_tripping_acknowledged_pin
+from caretaker_header import lora, get_location, oled, PATIENT_ADDRESS, buzzer_pin, patient_tripping_acknowledged_pin
 from random import randint
+from machine import Pin
 
-last_state = True
 
 can_determine_location = False
 patient_tripping_acknowledged = False
@@ -13,25 +12,41 @@ patient_body_temp = "37"
 has_patient_tripped = False
 all_nodes = []
 
+lora_sent_LED_pin = Pin(28, Pin.OUT)
+# lora_received_LED_pin = Pin(27, Pin.OUT)
+
     
 location = ""
 determined_building = ""
 determined_floor = ""
-determined_room = "L3.2.2"
+determined_room = ""
+combined_location = "L"
+
+
+location_determination_counter = 0
 
 
 def on_recv(payload):
     
-    global can_determine_location, all_nodes, patient_pulse, patient_body_temp, has_patient_tripped
+    global can_determine_location, all_nodes, patient_pulse, patient_body_temp, has_patient_tripped, location_determination_counter
     
-    if "done" in payload.message:
-        
+    message = payload.message.decode()
+    
+    if "D" in message: #D stands for done, from patient to caretaker, saying that it is done with broadcasting to all locations
+#         lora_received_LED_pin.on()
+#         sleep(0.2)
+#         lora_received_LED_pin.off()
         can_determine_location = True
+        print("can determine location now")
+        location_determination_counter += 1
         
-    elif "location" in payload.message:
+    elif "L" in message: #L stands for location, from a location reference node to caretaker, providing RSSI and SNR data
+#         lora_received_LED_pin.on()
+#         sleep(0.2)
+#         lora_received_LED_pin.off()        
+       
+        _, RSSI, SNR = message.split(',')
         
-        _, RSSI, SNR = payload.message.split(',')
-    
         this_node_data = {
         
             "location": payload.header_from,
@@ -42,12 +57,17 @@ def on_recv(payload):
         
         all_nodes.append(this_node_data)
     
-    elif "vitals" in payload.message:
+    elif "V" in message: #V stands for vitals, from patient to caretaker, providing vitals data like pulse rate and body temperature
+#         lora_received_LED_pin.on()
+#         sleep(0.2)
+#         lora_received_LED_pin.off()        
+       
+        _, patient_pulse, patient_body_temp = message.split(',')
         
-        _, patient_pulse, patient_body_temp = payload.message.split(',')
-        
-    elif "tripped" in payload.message:
-        
+    elif "E" in message: #E stands for emergency, from patient to caretaker, providing a notification for an emergency
+#         lora_received_LED_pin.on()
+#         sleep(0.2)
+#         lora_received_LED_pin.off()        
         has_patient_tripped = True
         
     else:
@@ -55,56 +75,67 @@ def on_recv(payload):
         pass
         
 # set callback
-# lora.on_recv = on_recv
+lora.on_recv = on_recv
 # 
 # # set to listen continuously
-# lora.set_mode_rx()
+lora.set_mode_rx()
 
 
 
 
 while True:
     
-#     if can_determine_location:
-#         
-#         location = get_location(all_nodes)
-#         
-#         num_of_decimals = location.count('.')
-#         
-#         match num_of_decimals:
-#             
-#             case 0:
-#                 
-#                 determined_building = location
-#                 
-#                 lora.send_to_wait(f"building,{determined_building}", PATIENT_ADDRESS)
-#         
-#             case 1:
-#                 
-#                 determined_floor = location
-#                 
-#                 lora.send_to_wait(f"floor,{determined_floor}", PATIENT_ADDRESS)
-#                 
-#             case 2:
-#                 
-#                 determined_room = location
-# 
-# 
-#             case others:
-#                 
-#                 determined_room = "error"
-# 
-# 
-#         all_nodes = list()
+    if can_determine_location:
+        
+        location = get_location(all_nodes) if len(all_nodes) != 0 else "e"
+        print(location)
 #         can_determine_location = False
-#         
-#         lora.send_to_wait("continue", PATIENT_ADDRESS)
-# 
+        
+        if location_determination_counter == 1:
+            
+            determined_building = location
+            print(determined_building)
+            
+            lora.send_to_wait(f"B,{determined_building}".encode(), PATIENT_ADDRESS) # C stands for continue, from caretaker to patient,to continue broadcasting
+            lora_sent_LED_pin.on()
+            sleep(0.2)
+            lora_sent_LED_pin.off()
+            
+        elif location_determination_counter == 2:
+        
+            determined_floor = location
+            print(determined_floor)
+                                
+            lora.send_to_wait(f"F,{determined_floor}".encode(), PATIENT_ADDRESS) # C stands for continue, from caretaker to patient, to
+            lora_sent_LED_pin.on()
+            sleep(0.2)
+            lora_sent_LED_pin.off()
+        
+        elif location_determination_counter == 3:
+        
+            determined_room = location
+            lora.send_to_wait("Continue".encode(), PATIENT_ADDRESS)
+            lora_sent_LED_pin.on()
+            sleep(0.2)
+            lora_sent_LED_pin.off()
+            
+            location_determination_counter = 0
+        
+       
+        else:
+            
+            pass
+
+
+        all_nodes = list()
+        can_determine_location = False
+        combined_location = f"L{determined_building}.{determined_floor}.{determined_room}" if determined_building != 'e' else "Le"
+        
     
-    if determined_room != "":
+    if combined_location != "":
         
         #display determined room location
-        oled.text(f"Location: {determined_room}", 0, 25)
+        oled.text(f"Location: {combined_location}", 0, 25)
         
         
     
@@ -119,44 +150,30 @@ while True:
         
         #display patient's body temp
         oled.text(f"Temp: {patient_body_temp} C", 0, 56)
-
-
-    # this is just for simulating changing data when used in the real world
-    # starts here
-    sleep(1)
-    
-    if last_state:
-        determined_room = "L3.2.1"
-        patient_pulse = int(patient_pulse) + randint(-2, 2)
-        patient_pulse = str(patient_pulse)
-        patient_body_temp = int(patient_body_temp) + randint(-2, 2)
-        patient_body_temp = str(patient_body_temp)
-    else:
-        determined_room = "L3.2.2"
-    
-    last_state = not last_state
-    
-    # ends here
-    
+     
     oled.show()
 
 
     oled.fill(0)
     
-    if has_patient_tripped:
-        
-        #turn on alarm
-        buzzer_pin.on()
+#     if has_patient_tripped:
+#         
+#         #turn on alarm
+#         buzzer_pin.on()
         
 
 
     #read emergency_acknowledged input button state
-    patient_tripping_acknowledged = patient_tripping_acknowledged_pin.value()
+#     patient_tripping_acknowledged = patient_tripping_acknowledged_pin.value()
+# 
+# 
+#     if has_patient_tripped and patient_tripping_acknowledged:
+#         
+#         #turn off alarm
+#         buzzer_pin.off()
+#         has_patient_tripped = False
+    
+    
+    
 
-
-    if has_patient_tripped and patient_tripping_acknowledged:
-        
-        #turn off alarm
-        buzzer_pin.off()
-        has_patient_tripped = False
 
