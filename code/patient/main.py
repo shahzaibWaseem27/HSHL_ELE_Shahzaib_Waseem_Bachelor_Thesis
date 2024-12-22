@@ -1,11 +1,10 @@
 from utime import sleep, ticks_ms
-from patient_header_file import all_nodes, broadcast_lora, pulse_sensor_pin, lora, CARETAKER_ADDRESS, i2c, init_adxl345, read_accel_data
-from ulora import LoRa
-from machine import Pin, ADC
+from header import all_nodes, broadcast_lora, pulse_sensor_pin, lora, CARETAKER_ADDRESS, i2c, init_adxl345, read_accel_data
 
 
 
 can_continue_broadcasting = True
+n = 2
 has_patient_tripped = False
 determined_building = None
 determined_floor = None
@@ -13,40 +12,59 @@ pulse_threshold = 58000
 time_of_last_pulse = 0
 body_temp = 0
 
+DEFAULT_ERROR_LOCATION = 3
 
-init_adxl345(i2c)
+# init_adxl345(i2c)
 
 
 def on_recv(payload):
     
     global can_continue_broadcasting, determined_building, determined_floor
     
-    if payload.message.contains("continue"):
-        
+    message = payload.message.decode()
+    
+    if "Continue" in message: 
+        print("can continue broadcasting")
         can_continue_broadcasting = True
         
-    elif payload.message.contains("building"):
-        
-        _, determined_building = payload.message.split(',')
-        
-    elif payload.message.contains("floor"):
-        
-        _, determined_floor = payload.message.split(',')
-        
+    elif "B" in message: # B stands for building, from the caretaker to the patient, indicating
+        # the determined buildin
+        print("received building payload")
+        _, determined_building = message.split(',')
+        print(f"building: {determined_building}")
+        print("can continue broadcasting")
+        can_continue_broadcasting = True
     
+    elif "F" in payload.message: # F stands for floor, from the caretaker to the patient, indicating
+        # the determined floor
+        print("received floor payload")
+        _, determined_floor = message.split(',')
+        print(f"floor: {determined_floor}")
+        print("can continue broadcasting")
+        can_continue_broadcasting = True
         
+
 # set callback
 lora.on_recv = on_recv
-
-# set to listen continuously
-lora.set_mode_rx()
 
 
 while True:
     
     if can_continue_broadcasting == True:
         
-        broadcast_lora(all_nodes, determined_building, determined_floor)
+        if determined_building == 'e' or determined_floor == 'e':
+            
+            determined_building = DEFAULT_ERROR_LOCATION
+            determined_floor = DEFAULT_ERROR_LOCATION            
+            determined_building = None
+            determined_floor = None
+            
+        print("About to start broadcasting")
+        
+        broadcast_lora(all_nodes, n, determined_building, determined_floor)
+    
+        print("Done broadcasting")
+#         lora.send_to_wait("D, done".encode(), CARETAKER_ADDRESS)
         
         can_continue_broadcasting = False
         
@@ -57,28 +75,23 @@ while True:
             
             
     
-    if is_pulse_detected(pulse_sensor_pin.read_u16(), pulse_threshold):
-        
-        time_of_this_pulse = ticks_ms()
-        
-        heart_rate = calc_heart_rate(time_of_this_pulse, time_of_last_pulse)
-        
-        time_of_last_pulse = time_of_this_pulse
-        
-    
-    body_temp = get_body_temp()
-    
-    lora.send_to_wait(f"vitals,{heart_rate},{body_temp}", CARETAKER_ADDRESS)
-    
-    
-    has_patient_tripped = check_patient_tripping()
-    
-    if has_patient_tripped:
-        
-        lora.send_to_wait("tripped", CARETAKER_ADDRESS)
-        
-    
-    
-    
-        
+#     if is_pulse_detected(pulse_sensor_pin.read_u16(), pulse_threshold):
+#         
+#         time_of_this_pulse = ticks_ms()
+#         
+#         heart_rate = calc_heart_rate(time_of_this_pulse, time_of_last_pulse)
+#         
+#         time_of_last_pulse = time_of_this_pulse
+#         
+#     
+#     body_temp = get_body_temp()
+#     
+#     lora.send_to_wait(f"vitals,{heart_rate},{body_temp}", CARETAKER_ADDRESS)
+#     
+#     
+#     has_patient_tripped = check_patient_tripping()
+#     
+#     if has_patient_tripped:
+#         
+#         lora.send_to_wait("tripped", CARETAKER_ADDRESS)
 
