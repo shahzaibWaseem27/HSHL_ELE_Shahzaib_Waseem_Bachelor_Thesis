@@ -1,81 +1,62 @@
-from machine import Pin, ADC
-from utime import ticks_diff
+from machine import Pin, ADC, I2C
+from ulora import LoRa, ModemConfig, SPIConfig
+from utime import ticks_diff, sleep
 import ustruct
 from math import sqrt
 
 # Lora Parameters
-RFM95_RST = 27
-RFM95_SPIBUS = SPIConfig.rp2_0
+RFM95_RST = 2
+RFM95_SPIBUS = SPIConfig.rp2040_zero
 RFM95_CS = 5
-RFM95_INT = 28
+RFM95_INT = 3
 RF95_FREQ = 868.0
 RF95_POW = 20
 CARETAKER_ADDRESS = 1
 PATIENT_ADDRESS = 2
 
-time_of_last_pulse = 0
+lora_sent_LED_pin = Pin(14, Pin.OUT)
 
 
 lora = LoRa(RFM95_SPIBUS, RFM95_INT, PATIENT_ADDRESS, RFM95_CS, reset_pin=RFM95_RST, freq=RF95_FREQ, tx_power=RF95_POW, acks=True)
 
+# set to listen continuously
+lora.set_mode_rx()
+
 pulse_sensor_pin = ADC(Pin(28))
-
-
 
 all_nodes = {
     
-    "L2" : {
+    "3" : {
         
-        "L2.0" : [
-            
-            "L2.0.1",
-            "L2.0.2"
-            
-        ],
+        "3" : [
         
-        "L2.1" : [
-            
-            "L2.1.1",
-            "L2.1.2",
-            "L2.1.3"
-            
-        ]
-        
-    },
-    
-    "L3" : {
-        
-        "L3.0" : [
-        
-            "L3.0.1",
-            "L3.0.2"
+            "3",
+            "4"
             
         ],
         
-        "L3.1" : [
+        "4" : [
             
-            "L3.1.1",
-            "L3.1.2",
-            "L3.1.3"
+            "3",
+            "4"
         
         ]
         
     },
     
-    "L4" : {
+    "4" : {
         
-        "L4.0" : [
+        "3" : [
         
-            "L4.0.1",
-            "L4.0.2"
+            "3",
+            "4"
             
         ],
         
-        "L4.1" : [
+        "4" : [
             
-            "L4.1.1",
-            "L4.1.2",
-            "L4.1.3"
+            "3",
+            "4"
         
         ]
         
@@ -83,47 +64,85 @@ all_nodes = {
     
 }
 
+# all_nodes = {
+#     
+#     "3" : {
+#         
+#         "0" : [
+#         
+#             "1",
+#             "2"
+#             
+#         ],
+#         
+#         "1" : [
+#             
+#             "1",
+#             "2",
+#             "3"
+#         
+#         ]
+#         
+#     },
+#     
+#     "4" : {
+#         
+#         "0" : [
+#         
+#             "1",
+#             "2"
+#             
+#         ],
+#         
+#         "1" : [
+#             
+#             "1",
+#             "2",
+#             "3"
+#         
+#         ]
+#         
+#     },
+#     
+# }
 
 
-def broadcast_lora(all_nodes, determined_building=None, determined_floor=None):
+
+def broadcast_lora(all_nodes, n=1, determined_building=None, determined_floor=None):
 
 
     if determined_building == None and determined_floor == None:
         
-
-        nodes = all_nodes.keys()
-        
-        for node in nodes:
-            lora.send_to_wait("broadcast", node)
-        
-        #sleep(1)
-            
-        lora.send_to_wait("done", CARETAKER_ADDRESS)
-            
+        nodes = list(all_nodes.keys())                                
+                                              
     elif determined_building != None and determined_floor == None:
         
-        
-        nodes = all_nodes[determined_building].keys()
-        
-        for node in nodes:
-            lora.send_to_wait("broadcast", node)
-        
-        #sleep(1)
+        nodes = list(all_nodes[determined_building].keys())
             
-        lora.send_to_wait("done", CARETAKER_ADDRESS)
-            
-    elif determined_building != None and determined_floor != None
+    elif determined_building != None and determined_floor != None:
     
-    
-        nodes = all_nodes[determined_building][determined_floor]
-    
-        for node in nodes:
-            lora.send_to_wait("broadcast", node)
-            
+        nodes = list(all_nodes[determined_building][determined_floor])
         
-        lora.send_to_wait("done", CARETAKER_ADDRESS)
-    
+    else:
+        
+        nodes = nodes = list(all_nodes.keys())
+        
+    print(nodes)    
 
+    for i in range(len(nodes)):
+        nodes[i] = int(nodes[i])
+
+    for node in nodes:
+        for i in range(n):
+            lora.send_to_wait("broadcast".encode(), node) # location reference nodes don't care what the payload is from the patient. They only forward the RSSI
+            # and SNR of this payload to caretaker
+            lora_sent_LED_pin.on()
+            sleep(0.2)
+            lora_sent_LED_pin.off()
+            
+    
+    lora.send_to_wait("D, done".encode(), CARETAKER_ADDRESS) #D stands for done, from patient to caretaker, indicating that the broadcast is done
+    
 def is_pulse_detected(signal_val, threshold):
     
     return signal_val >= threshold
@@ -184,4 +203,3 @@ def check_patient_tripping(i2c, freefall_threshold):
 
     
     
-
