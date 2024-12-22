@@ -67,6 +67,7 @@ class SPIConfig():
     esp8286_1 = (1, 14, 13, 12)
     esp32_1 = (1, 14, 13, 12)
     esp32_2 = (2, 18, 23, 19)
+    rp2040_zero = (0, 6, 7, 4)
 
 class LoRa(object):
     def __init__(self, spi_channel, interrupt, this_address, cs_pin, reset_pin=None, freq=868.0, tx_power=14,
@@ -241,7 +242,8 @@ class LoRa(object):
         self.wait_packet_sent()
         self.set_mode_idle()
         self.wait_cad()
-
+        
+        
         header = [header_to, self._this_address, header_id, header_flags]
         if type(data) == int:
             data = [data]
@@ -254,6 +256,7 @@ class LoRa(object):
             data = [b for b in self._encrypt(bytes(data))]
 
         payload = header + data
+        
         self._spi_write(REG_0D_FIFO_ADDR_PTR, 0)
         self._spi_write(REG_00_FIFO, payload)
         self._spi_write(REG_22_PAYLOAD_LENGTH, len(payload))
@@ -287,6 +290,7 @@ class LoRa(object):
         self.wait_packet_sent()
 
     def _spi_write(self, register, payload):
+        
         if type(payload) == int:
             payload = [payload]
         elif type(payload) == bytes:
