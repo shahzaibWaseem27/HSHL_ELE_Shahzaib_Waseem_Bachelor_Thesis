@@ -4,16 +4,16 @@ from ulora import LoRa, ModemConfig, SPIConfig
 
 
 # Lora Parameters
-RFM95_RST = 27
-RFM95_SPIBUS = SPIConfig.rp2_0
+RFM95_RST = 2
+RFM95_SPIBUS = SPIConfig.rp2040_zero
 RFM95_CS = 5
-RFM95_INT = 28
+RFM95_INT = 3
 RF95_FREQ = 868.0
 RF95_POW = 20
 CARETAKER_ADDRESS = 1
 PATIENT_ADDRESS = 2
 
-# lora = LoRa(RFM95_SPIBUS, RFM95_INT, CARETAKER_ADDRESS, RFM95_CS, reset_pin=RFM95_RST, freq=RF95_FREQ, tx_power=RF95_POW, acks=True)
+lora = LoRa(RFM95_SPIBUS, RFM95_INT, CARETAKER_ADDRESS, RFM95_CS, reset_pin=RFM95_RST, freq=RF95_FREQ, tx_power=RF95_POW, acks=True)
 
 
 def get_location(all_nodes):
@@ -50,8 +50,11 @@ def get_location(all_nodes):
 
        
         previous_location = node["location"]
-
-        this_node_score = p * node["RSSI"] + q * node["SNR"]
+#         print(node["RSSI"])
+#         print(type(node["RSSI"]))
+#         print(node["SNR"])
+#         print(type(node["SNR"]))
+        this_node_score = p * float(node["RSSI"]) + q * float(node["SNR"])
         latest_location_score_sum += this_node_score
         num_of_nodes_in_latest_location += 1
 
@@ -69,7 +72,7 @@ def get_location(all_nodes):
 
 
 
-i2c = SoftI2C(scl=Pin(7), sda=Pin(8))
+i2c = SoftI2C(scl=Pin(15), sda=Pin(14))
 
 oled_width = 128
 oled_height = 64
@@ -84,27 +87,27 @@ patient_tripping_acknowledged_pin = Pin(26, Pin.IN, Pin.PULL_DOWN)
 
 
 
-all_nodes = [
-    
-    {
-        "location": "L1",
-        "RSSI": -35,
-        "SNR": 10
-    },
-    {
-        "location": "L1",
-        "RSSI": -37,
-        "SNR": 9.9
-    },
-    {
-        "location": "L2",
-        "RSSI": -57,
-        "SNR": 9.1
-    },
-    {
-        "location": "L2",
-        "RSSI": -62,
-        "SNR": 8.5
-    }
-    
-]
+# all_nodes = [
+#     
+#     {
+#         "location": 1,
+#         "RSSI": -35,
+#         "SNR": 10
+#     },
+#     {
+#         "location": 1,
+#         "RSSI": -37,
+#         "SNR": 9.9
+#     },
+#     {
+#         "location": 2,
+#         "RSSI": -57,
+#         "SNR": 9.1
+#     },
+#     {
+#         "location": 2,
+#         "RSSI": -62,
+#         "SNR": 8.5
+#     }
+#     
+# ]
