@@ -16,13 +16,13 @@ PATIENT_ADDRESS = 2
 lora = LoRa(RFM95_SPIBUS, RFM95_INT, CARETAKER_ADDRESS, RFM95_CS, reset_pin=RFM95_RST, freq=RF95_FREQ, tx_power=RF95_POW, acks=True)
 
 
-def get_location(all_nodes):
+def get_location(all_nodes, p):
     
     all_location_results = []
     latest_location_score_sum = 0
     num_of_nodes_in_latest_location = 0
     previous_location = all_nodes[0]["location"] 
-    p = 0.5
+    
     q = 1 - p
 
     for idx, node in enumerate(all_nodes):
