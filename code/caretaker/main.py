@@ -22,6 +22,7 @@ determined_floor = ""
 determined_room = ""
 combined_location = "L"
 
+p = 0.5
 
 location_determination_counter = 0
 
@@ -87,7 +88,7 @@ while True:
     
     if can_determine_location:
         
-        location = get_location(all_nodes) if len(all_nodes) != 0 else "e"
+        location = get_location(all_nodes, p) if len(all_nodes) != 0 else "e"
         print(location)
 #         can_determine_location = False
         
@@ -96,7 +97,7 @@ while True:
             determined_building = location
             print(determined_building)
             
-            lora.send_to_wait(f"B,{determined_building}".encode(), PATIENT_ADDRESS) # C stands for continue, from caretaker to patient,to continue broadcasting
+            lora.send_to_wait(f"B,{determined_building}".encode(), PATIENT_ADDRESS)
             lora_sent_LED_pin.on()
             sleep(0.2)
             lora_sent_LED_pin.off()
@@ -106,7 +107,7 @@ while True:
             determined_floor = location
             print(determined_floor)
                                 
-            lora.send_to_wait(f"F,{determined_floor}".encode(), PATIENT_ADDRESS) # C stands for continue, from caretaker to patient, to
+            lora.send_to_wait(f"F,{determined_floor}".encode(), PATIENT_ADDRESS) 
             lora_sent_LED_pin.on()
             sleep(0.2)
             lora_sent_LED_pin.off()
