@@ -25,39 +25,28 @@ def get_location(all_nodes):
     p = 0.5
     q = 1 - p
 
-
     for idx, node in enumerate(all_nodes):
-        
         is_last_node = idx == len(all_nodes) - 1
         
+        this_node_score = p * float(node["RSSI"]) + q * float(node["SNR"])
+        latest_location_score_sum += this_node_score
+        num_of_nodes_in_latest_location += 1
+
         if node["location"] != previous_location or is_last_node:
             
             latest_location_average_score = (
                 latest_location_score_sum / num_of_nodes_in_latest_location
             )
-            
             this_location_hashmap = {
-            
                 "location": previous_location,
                 "average_score": latest_location_average_score,
-            
             }
             all_location_results.append(this_location_hashmap)
 
-           
             latest_location_score_sum = 0
             num_of_nodes_in_latest_location = 0
 
-       
         previous_location = node["location"]
-#         print(node["RSSI"])
-#         print(type(node["RSSI"]))
-#         print(node["SNR"])
-#         print(type(node["SNR"]))
-        this_node_score = p * float(node["RSSI"]) + q * float(node["SNR"])
-        latest_location_score_sum += this_node_score
-        num_of_nodes_in_latest_location += 1
-
 
     max_score = float("-inf")
     determined_location = None
