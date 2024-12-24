@@ -25,28 +25,99 @@ def get_location(all_nodes, p):
     
     q = 1 - p
 
+
     for idx, node in enumerate(all_nodes):
+        
         is_last_node = idx == len(all_nodes) - 1
         
-        this_node_score = p * float(node["RSSI"]) + q * float(node["SNR"])
-        latest_location_score_sum += this_node_score
-        num_of_nodes_in_latest_location += 1
-
-        if node["location"] != previous_location or is_last_node:
+        this_location = node["location"]
+        
+        is_new_location = this_location != previous_location
+        
+        if not is_last_node and is_new_location:
             
             latest_location_average_score = (
                 latest_location_score_sum / num_of_nodes_in_latest_location
             )
+            
+            
             this_location_hashmap = {
+            
                 "location": previous_location,
                 "average_score": latest_location_average_score,
+            
             }
+            
             all_location_results.append(this_location_hashmap)
 
+           
+            this_node_score = p * float(node["RSSI"]) + q * float(node["SNR"])
+            
             latest_location_score_sum = 0
             num_of_nodes_in_latest_location = 0
-
+            
+            latest_location_score_sum += this_node_score
+            num_of_nodes_in_latest_location += 1
+            
+        
+        elif not is_last_node and not is_new_location:
+            
+            this_node_score = p * float(node["RSSI"]) + q * float(node["SNR"])
+            latest_location_score_sum += this_node_score
+            num_of_nodes_in_latest_location += 1
+            
+    
+        elif is_last_node and is_new_location:
+            
+            latest_location_average_score = (
+                latest_location_score_sum / num_of_nodes_in_latest_location
+            )
+            
+            
+            this_location_hashmap = {
+            
+                "location": previous_location,
+                "average_score": latest_location_average_score,
+            
+            }
+            
+            all_location_results.append(this_location_hashmap)
+            
+            
+            this_node_score = p * float(node["RSSI"]) + q * float(node["SNR"])
+            
+            this_location_hashmap = {
+            
+                "location": this_location,
+                "average_score": this_node_score,
+            
+            }
+            
+            all_location_results.append(this_location_hashmap)
+            
+            
+        elif is_last_node and not is_new_location:
+            
+            this_node_score = p * float(node["RSSI"]) + q * float(node["SNR"])
+            latest_location_score_sum += this_node_score
+            num_of_nodes_in_latest_location += 1
+            
+            latest_location_average_score = (
+                latest_location_score_sum / num_of_nodes_in_latest_location
+            )
+            
+            this_location_hashmap = {
+            
+                "location": previous_location,
+                "average_score": latest_location_average_score,
+            
+            }
+            
+            all_location_results.append(this_location_hashmap)
+       
         previous_location = node["location"]
+
+    print(all_nodes)
 
     max_score = float("-inf")
     determined_location = None
