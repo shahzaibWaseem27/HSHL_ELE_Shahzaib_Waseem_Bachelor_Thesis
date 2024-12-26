@@ -23,6 +23,9 @@ lora = LoRa(RFM95_SPIBUS, RFM95_INT, PATIENT_ADDRESS, RFM95_CS, reset_pin=RFM95_
 lora.set_mode_rx()
 
 pulse_sensor_pin = ADC(Pin(28))
+body_temp_sensor_pin = ADC(Pin(29))
+
+
 
 all_nodes = {
     
@@ -142,7 +145,17 @@ def broadcast_lora(all_nodes, n=1, determined_building=None, determined_floor=No
             
     
     lora.send_to_wait("D, done".encode(), CARETAKER_ADDRESS) #D stands for done, from patient to caretaker, indicating that the broadcast is done
-    
+
+
+def get_body_temp():
+
+    global body_temp_sensor_pin
+
+    voltage_reading = body_temp_sensor_pin.read_uv() * 1E6 #convert microvolts into volts
+
+    return voltage_reading * 100
+
+
 def is_pulse_detected(signal_val, threshold):
     
     return signal_val >= threshold
