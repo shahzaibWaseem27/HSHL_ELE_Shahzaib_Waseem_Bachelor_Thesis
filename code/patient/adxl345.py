@@ -1,5 +1,6 @@
 from machine import Pin, I2C
 import time
+from header import lora
 
 # I2C setup (move to global scope)
 i2c = I2C(0, scl=Pin(21), sda=Pin(20))  # Adjust pins as per your hardware
@@ -33,10 +34,9 @@ fall_state = {
     "last_event_time": 0
 }
 
-# GPIO setup for buzzer and button
-buzzer = Pin(15, Pin.OUT)
-button = Pin(16, Pin.IN, Pin.PULL_DOWN)
-int1 = Pin(17, Pin.IN, Pin.PULL_DOWN)
+
+button_pin = Pin(16, Pin.IN, Pin.PULL_DOWN)
+adxl345_int1_pin = Pin(17, Pin.IN, Pin.PULL_DOWN)
 
 def initialize_adxl345():
     """
@@ -93,8 +93,7 @@ def fall_interrupt_handler(pin):
         print("Inactivity Detected")
         if fall_state["activity_detected"] and time.ticks_diff(current_time, fall_state["last_event_time"]) <= ACTIVITY_TO_INACTIVITY_MAX_TIME:
             fall_state["inactivity_detected"] = True
-            print("Fall confirmed! Triggering buzzer.")
-            buzzer.on()
+            lora.send_to_wait("emergency", CARETAKER_ADDRESS)
             reset_fall_state()
         else:
             print("Invalid sequence: Inactivity interrupt without prior Activity")
