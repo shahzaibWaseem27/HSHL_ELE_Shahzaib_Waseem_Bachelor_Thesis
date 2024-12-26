@@ -80,23 +80,16 @@ while True:
             
             
     
-#     if is_pulse_detected(pulse_sensor_pin.read_u16(), pulse_threshold):
-#         
-#         time_of_this_pulse = ticks_ms()
-#         
-#         heart_rate = calc_heart_rate(time_of_this_pulse, time_of_last_pulse)
-#         
-#         time_of_last_pulse = time_of_this_pulse
-#         
-#     
-#     body_temp = get_body_temp()
-#     
-#     lora.send_to_wait(f"vitals,{heart_rate},{body_temp}", CARETAKER_ADDRESS)
-#     
-#     
-#     has_patient_tripped = check_patient_tripping()
-#     
-#     if has_patient_tripped:
-#         
-#         lora.send_to_wait("tripped", CARETAKER_ADDRESS)
+    if is_pulse_detected(pulse_sensor_pin.read_u16(), pulse_threshold):
+         
+         time_of_this_pulse = ticks_ms()
+         
+         heart_rate = calc_heart_rate(time_of_this_pulse, time_of_last_pulse)
+         
+         time_of_last_pulse = time_of_this_pulse
+         
+     
+     body_temp = get_body_temp()
+     
+     lora.send_to_wait(f"vitals,{heart_rate},{body_temp}", CARETAKER_ADDRESS)
 
