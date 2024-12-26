@@ -151,9 +151,14 @@ def get_body_temp():
 
     global body_temp_sensor_pin
 
-    voltage_reading = body_temp_sensor_pin.read_uv() * 1E6 #convert microvolts into volts
+    # LM35 produces a 10mV change in its signal pin for every 1 degree celcius change in temperature
+    # converting millivolts conversion ratio to microvolts ratio
+    # 10mV / C --> 10000uV / C
+    
 
-    return voltage_reading * 100
+    temperature_reading = body_temp_sensor_pin.read_uv() / 10E3 # use conversion ratio to get temperature reading
+
+    return temperature_reading
 
 
 def is_pulse_detected(signal_val, threshold):
