@@ -1,5 +1,6 @@
 from utime import sleep, ticks_ms
 from header import all_nodes, broadcast_lora, pulse_sensor_pin, lora, CARETAKER_ADDRESS, i2c, init_adxl345, read_accel_data
+import adxl345
 
 
 
@@ -14,7 +15,11 @@ body_temp = 0
 
 DEFAULT_ERROR_LOCATION = 3
 
-# init_adxl345(i2c)
+adxl345.initialize_adxl345()
+
+# Setup interrupts
+adxl345.int1.irq(trigger=Pin.IRQ_RISING, handler=adxl345.fall_interrupt_handler)
+adxl345.button.irq(trigger=Pin.IRQ_RISING, handler=adxl345.button_pressed)
 
 
 def on_recv(payload):
