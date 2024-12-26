@@ -157,38 +157,6 @@ def calc_heart_rate(time_of_this_pulse, time_of_last_pulse):
     return 60 / (ticks_diff(time_of_this_pulse, time_of_last_pulse) / 1E3) #converting milliseconds result into seconds
 
 
-
- 
-# Constants
-ADXL345_ADDRESS = 0x53
-ADXL345_POWER_CTL = 0x2D
-ADXL345_DATA_FORMAT = 0x31
-ADXL345_DATAX0 = 0x32
- 
-# Initialize I2C
-i2c = I2C(0, sda=Pin(8), scl=Pin(9), freq=400000)
- 
-# Initialize ADXL345
-def init_adxl345(i2c):
-    i2c.writeto_mem(ADXL345_ADDRESS, ADXL345_POWER_CTL, bytearray([0x08]))  # Set bit 3 to 1 to enable measurement mode
-    i2c.writeto_mem(ADXL345_ADDRESS, ADXL345_DATA_FORMAT, bytearray([0x0B]))  # Set data format to full resolution, +/- 16g
- 
-# Read acceleration data
-def read_accel_data(i2c):
-    data = i2c.readfrom_mem(ADXL345_ADDRESS, ADXL345_DATAX0, 6)
-    x, y, z = ustruct.unpack('<3h', data)
-    return x, y, z
-
-
-def check_patient_tripping(i2c, freefall_threshold):
-    
-    x, y, z = read_accel_data(i2c)
-    
-    magnitude = sqrt(x**2 + y**2 + z**2)
-    
-    if magnitude < freefall_threshold:
-        
-        return True
     
         
         
