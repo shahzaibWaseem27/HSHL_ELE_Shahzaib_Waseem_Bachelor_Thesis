@@ -40,7 +40,7 @@ def on_recv(payload):
         print("can continue broadcasting")
         can_continue_broadcasting = True
     
-    elif "F" in payload.message: # F stands for floor, from the caretaker to the patient, indicating
+    elif "F" in message: # F stands for floor, from the caretaker to the patient, indicating
         # the determined floor
         print("received floor payload")
         _, determined_floor = message.split(',')
