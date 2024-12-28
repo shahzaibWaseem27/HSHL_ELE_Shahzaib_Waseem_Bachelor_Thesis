@@ -26,7 +26,7 @@ pulse_sensor_pin = ADC(Pin(28))
 body_temp_sensor_pin = ADC(Pin(29))
 
 
-
+# this dictionary only used for basic testing due to limited number of nodes and hardware
 all_nodes = {
     
     "3" : {
