@@ -19,7 +19,7 @@ adxl345.initialize_adxl345()
 
 # Setup interrupts
 adxl345.int1.irq(trigger=Pin.IRQ_RISING, handler=adxl345.fall_interrupt_handler)
-adxl345.button.irq(trigger=Pin.IRQ_RISING, handler=adxl345.button_pressed)
+
 
 
 def on_recv(payload):
