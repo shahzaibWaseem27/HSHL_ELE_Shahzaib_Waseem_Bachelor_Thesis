@@ -69,7 +69,7 @@ def on_recv(payload):
 #         lora_received_LED_pin.on()
 #         sleep(0.2)
 #         lora_received_LED_pin.off()        
-        has_patient_tripped = True
+        buzzer_pin.on()
         
     else:
         
@@ -156,23 +156,6 @@ while True:
 
 
     oled.fill(0)
-    
-#     if has_patient_tripped:
-#         
-#         #turn on alarm
-#         buzzer_pin.on()
-        
-
-
-    #read emergency_acknowledged input button state
-#     patient_tripping_acknowledged = patient_tripping_acknowledged_pin.value()
-# 
-# 
-#     if has_patient_tripped and patient_tripping_acknowledged:
-#         
-#         #turn off alarm
-#         buzzer_pin.off()
-#         has_patient_tripped = False
     
     
     
