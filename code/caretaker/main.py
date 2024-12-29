@@ -1,6 +1,6 @@
 from utime import sleep
 from ulora import LoRa, ModemConfig, SPIConfig
-from caretaker_header import lora, get_location, oled, PATIENT_ADDRESS, buzzer_pin, patient_tripping_acknowledged_pin
+import caretaker_header
 from random import randint
 from machine import Pin
 
@@ -25,6 +25,8 @@ combined_location = "L"
 p = 0.5
 
 location_determination_counter = 0
+
+caretaker_header.patient_tripping_acknowledged_pin.irq(trigger=Pin.IRQ_RISING, handler=caretaker_header.handle_patient_tripping_acknowledged)
 
 
 def on_recv(payload):
