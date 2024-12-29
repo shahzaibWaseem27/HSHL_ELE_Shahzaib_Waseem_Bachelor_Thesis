@@ -34,9 +34,7 @@ fall_state = {
     "last_event_time": 0
 }
 
-
-button_pin = Pin(16, Pin.IN, Pin.PULL_DOWN)
-adxl345_int1_pin = Pin(17, Pin.IN, Pin.PULL_DOWN)
+int1 = Pin(17, Pin.IN, Pin.PULL_DOWN)
 
 def initialize_adxl345():
     """
@@ -99,11 +97,3 @@ def fall_interrupt_handler(pin):
             print("Invalid sequence: Inactivity interrupt without prior Activity")
             reset_fall_state()
 
-def button_pressed(pin):
-    """
-    Handles button press to turn off the buzzer and reset state.
-    """
-    if pin.value():
-        print("Buzzer turned off by button press.")
-        buzzer.off()
-        reset_fall_state()
