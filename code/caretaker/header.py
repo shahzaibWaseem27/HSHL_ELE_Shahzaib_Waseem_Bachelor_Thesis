@@ -141,6 +141,12 @@ oled = SSD1306_I2C(oled_width, oled_height, i2c)
 
 
 buzzer_pin = Pin(18, Pin.OUT)
-
 patient_tripping_acknowledged_pin = Pin(26, Pin.IN, Pin.PULL_DOWN)
+
+def handle_patient_tripping_acknowledged(pin):
+
+    global buzzer_pin
+
+    buzzer_pin.off()
+
 
