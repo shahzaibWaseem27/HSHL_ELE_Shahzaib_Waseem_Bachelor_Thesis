@@ -109,11 +109,13 @@ def get_body_temp():
     global body_temp_sensor_pin
 
     # LM35 produces a 10mV change in its signal pin for every 1 degree celcius change in temperature
-    # converting millivolts conversion ratio to microvolts ratio
+    # LM35 seemingly also induces a 500mV offset in its voltage reading that needs to be corrected
+    # converting millivolts conversion factor to be expressed in microvolts
     # 10mV / C --> 10000uV / C
-    
 
-    temperature_reading = body_temp_sensor_pin.read_uv() / 10E3 # use conversion ratio to get temperature reading
+    #500mV --> 500000 uV
+
+    temperature_reading = (body_temp_sensor_pin.read_uv() - 500E3) / 10E3 # subtract the 500mV offset from voltage value, and use conversion factor to get temperature reading
 
     return temperature_reading
 
