@@ -144,30 +144,3 @@ buzzer_pin = Pin(18, Pin.OUT)
 
 patient_tripping_acknowledged_pin = Pin(26, Pin.IN, Pin.PULL_DOWN)
 
-
-
-
-# all_nodes = [
-#     
-#     {
-#         "location": 1,
-#         "RSSI": -35,
-#         "SNR": 10
-#     },
-#     {
-#         "location": 1,
-#         "RSSI": -37,
-#         "SNR": 9.9
-#     },
-#     {
-#         "location": 2,
-#         "RSSI": -57,
-#         "SNR": 9.1
-#     },
-#     {
-#         "location": 2,
-#         "RSSI": -62,
-#         "SNR": 8.5
-#     }
-#     
-# ]
