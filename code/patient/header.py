@@ -22,11 +22,7 @@ lora = LoRa(RFM95_SPIBUS, RFM95_INT, PATIENT_ADDRESS, RFM95_CS, reset_pin=RFM95_
 # set to listen continuously
 lora.set_mode_rx()
 
-pulse_sensor_pin = ADC(Pin(28))
-body_temp_sensor_pin = ADC(Pin(29))
 
-
-# this dictionary only used for basic testing due to limited number of nodes and hardware
 all_nodes = {
     
     "3" : {
@@ -68,6 +64,8 @@ all_nodes = {
 }
 
 
+
+
 def broadcast_lora(all_nodes, n=1, determined_building=None, determined_floor=None):
 
 
@@ -85,57 +83,35 @@ def broadcast_lora(all_nodes, n=1, determined_building=None, determined_floor=No
         
     else:
         
-        nodes = nodes = list(all_nodes.keys())
-        
-    print(nodes)    
+        nodes = nodes = list(all_nodes.keys()) 
 
     for i in range(len(nodes)):
         nodes[i] = int(nodes[i])
+        
+    print(f"{nodes}: {type(nodes)}")   
 
     for node in nodes:
+        print(f"n is {n}")
         for i in range(n):
+            print("about to send lora packet")
             lora.send_to_wait("broadcast".encode(), node) # location reference nodes don't care what the payload is from the patient. They only forward the RSSI
             # and SNR of this payload to caretaker
+            print(f"sent lora packet {i + 1} to {node}")
             lora_sent_LED_pin.on()
             sleep(0.2)
             lora_sent_LED_pin.off()
+            print("reached end of loop")
             
     
+    print("about to send done")
     lora.send_to_wait("D, done".encode(), CARETAKER_ADDRESS) #D stands for done, from patient to caretaker, indicating that the broadcast is done
+    lora_sent_LED_pin.on()
+    sleep(0.2)
+    lora_sent_LED_pin.off()
+    print("sent done")
 
 
-def get_body_temp():
 
-    global body_temp_sensor_pin
-
-    # LM35 produces a 10mV change in its signal pin for every 1 degree celcius change in temperature
-    # LM35 seemingly also induces a 500mV offset in its voltage reading that needs to be corrected
-    # converting millivolts conversion factor to be expressed in microvolts
-    # 10mV / C --> 10000uV / C
-
-    #500mV --> 500000 uV
-
-    temperature_reading = (body_temp_sensor_pin.read_uv() - 500E3) / 10E3 # subtract the 500mV offset from voltage value, and use conversion factor to get temperature reading
-
-    return temperature_reading
-
-
-def is_pulse_detected(signal_val, threshold):
-    
-    return signal_val >= threshold
-
-
-def calc_heart_rate(time_of_this_pulse, time_of_last_pulse):
-    
-    # x seconds --> 1 pulse
-    # 1 second --> 1/x pulses
-    # 60 seconds --> 60/x pulses
-    
-    return 60 / (ticks_diff(time_of_this_pulse, time_of_last_pulse) / 1E3) #converting milliseconds result into seconds
-
-
-    
-        
         
         
     
