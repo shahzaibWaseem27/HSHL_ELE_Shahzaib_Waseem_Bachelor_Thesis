@@ -34,8 +34,6 @@ fall_state = {
     "last_event_time": 0
 }
 
-int1 = Pin(17, Pin.IN, Pin.PULL_DOWN)
-
 def initialize_adxl345():
     """
     Initializes the ADXL345 accelerometer for fall detection.
@@ -97,3 +95,5 @@ def fall_interrupt_handler(pin):
             print("Invalid sequence: Inactivity interrupt without prior Activity")
             reset_fall_state()
 
+int1_pin = Pin(17, Pin.IN, Pin.PULL_DOWN)
+int1_pin.irq(trigger=Pin.IRQ_RISING, handler=fall_interrupt_handler)
