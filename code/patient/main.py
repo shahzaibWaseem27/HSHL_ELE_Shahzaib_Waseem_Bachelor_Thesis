@@ -75,29 +75,13 @@ while True:
     samples_average = body_temp_header.get_samples_average()
     body_temp = body_temp_header.Compute_Temp(samples_average)
     #print(f"Body temp: {body_temp}")
-    lora.send_to_wait(f"V,65,{body_temp}", CARETAKER_ADDRESS)
 
-    #pulse_reading = pulse_sensor_header.pulse_sensor_pin.read_u16()
-    #print(f"{pulse_reading}")  
-            
+    bpm = pulse_sensor_header.get_bpm()
+    #print(f"{bpm}")  
+
+    lora.send_to_wait(f"V,{bpm},{body_temp}", CARETAKER_ADDRESS)
+
+    # we don't need to check for fall detection. It is handled through interrupt and interrupt handlers
     
-#     if is_pulse_detected(pulse_sensor_pin.read_u16(), pulse_threshold):
-#         
-#         time_of_this_pulse = ticks_ms()
-#         
-#         heart_rate = calc_heart_rate(time_of_this_pulse, time_of_last_pulse)
-#         
-#         time_of_last_pulse = time_of_this_pulse
-#         
-#     
-#     body_temp = get_body_temp()
-#     
-#     lora.send_to_wait(f"vitals,{heart_rate},{body_temp}", CARETAKER_ADDRESS)
-#     
-#     
-#     has_patient_tripped = check_patient_tripping()
-#     
-#     if has_patient_tripped:
-#         
-#         lora.send_to_wait("tripped", CARETAKER_ADDRESS)
+    sleep(0.1)
 
