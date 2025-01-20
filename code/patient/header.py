@@ -70,16 +70,19 @@ def broadcast_lora(all_nodes, n=1, determined_building=None, determined_floor=No
 
 
     if determined_building == None and determined_floor == None:
-        
-        nodes = list(all_nodes.keys())                                
+
+        nodes = list(all_nodes.keys())
+        print("building nodes extracted")
                                               
     elif determined_building != None and determined_floor == None:
         
         nodes = list(all_nodes[determined_building].keys())
+        print(f"Working on all floors of building {determined_building}")
             
     elif determined_building != None and determined_floor != None:
     
         nodes = list(all_nodes[determined_building][determined_floor])
+        print(f"Working on all rooms of floor {determined_floor} of building {determined_building}")
         
     else:
         
@@ -88,28 +91,24 @@ def broadcast_lora(all_nodes, n=1, determined_building=None, determined_floor=No
     for i in range(len(nodes)):
         nodes[i] = int(nodes[i])
         
-    print(f"{nodes}: {type(nodes)}")   
+    print(f"List of working nodes: {nodes}: {type(nodes)}")   
 
     for node in nodes:
-        print(f"n is {n}")
+        
         for i in range(n):
-            print("about to send lora packet")
+
             lora.send_to_wait("broadcast".encode(), node) # location reference nodes don't care what the payload is from the patient. They only forward the RSSI
             # and SNR of this payload to caretaker
-            print(f"sent lora packet {i + 1} to {node}")
+            print(f"sent lora packet {i + 1} to node {node}")
             lora_sent_LED_pin.on()
             sleep(0.2)
             lora_sent_LED_pin.off()
-            print("reached end of loop")
             
-    
-    print("about to send done")
+
     lora.send_to_wait("D, done".encode(), CARETAKER_ADDRESS) #D stands for done, from patient to caretaker, indicating that the broadcast is done
     lora_sent_LED_pin.on()
     sleep(0.2)
     lora_sent_LED_pin.off()
-    print("sent done")
-
 
 
         
